@@ -5,6 +5,41 @@
 <%@page import="Modelo.Categoria"%>
 <%@page import="Modelo.Administrador"%>
 
+<%!
+    // OBTENER LA RUTA DE UNA IMAGEN
+    // Acepta imágenes de Cloudinary y las antiguas imágenes locales.
+
+    private String obtenerRutaImagen(String imagen, String contexto) {
+
+        if (imagen == null || imagen.trim().isEmpty()) {
+            return "";
+        }
+
+        imagen = imagen.trim().replace("\\", "/");
+
+        // IMÁGENES DE CLOUDINARY
+        if (imagen.startsWith("https://") || imagen.startsWith("http://")) {
+            return imagen;
+        }
+
+        // QUITAR BARRAS INICIALES
+        while (imagen.startsWith("/")) {
+            imagen = imagen.substring(1);
+        }
+
+        // IMÁGENES LOCALES ANTIGUAS
+        if (imagen.startsWith("Imagenes/")) {
+            return contexto + "/" + imagen;
+        }
+
+        if (imagen.startsWith("ImagenesProductos/")) {
+            return contexto + "/Imagenes/" + imagen;
+        }
+
+        return contexto + "/Imagenes/ImagenesProductos/" + imagen;
+    }
+%>
+
 <%
     if (session.getAttribute("administrador") == null) {
         response.sendRedirect(request.getContextPath() + "/Vista/Login/Admin/Login.jsp");
@@ -943,7 +978,7 @@
                                 <% if (p.imagen != null && !p.imagen.trim().isEmpty()) { %>
 
                                     <img class="producto-imagen"
-                                         src="<%=ruta%>/<%=p.imagen%>"
+                                         src="<%=obtenerRutaImagen(p.imagen, ruta)%>"
                                          alt="Imagen de <%=p.nombre%>">
 
                                 <% } else { %>
@@ -1106,7 +1141,8 @@
                                             <div class="advertencia-imagen"></div>
 
                                             <img class="vista-previa"
-                                                 src="<%=p.imagen != null && !p.imagen.trim().isEmpty() ? ruta + "/" + p.imagen : ""%>"
+                                                 src="<%=obtenerRutaImagen(p.imagen, ruta)%>"
+                                                 data-original-src="<%=obtenerRutaImagen(p.imagen, ruta)%>"
                                                  alt="Vista previa"
                                                  style="<%=p.imagen != null && !p.imagen.trim().isEmpty() ? "display:block;" : "display:none;"%>">
 
@@ -1364,12 +1400,14 @@
         formulario.reset();
 
         const preview = formulario.querySelector(".vista-previa");
-        const imagenOriginal = formulario.querySelector(
-            'input[name="txtimagen"]'
-        ).value;
+
+        // RECUPERAR LA URL ORIGINAL DE LA IMAGEN
+        // Funciona tanto con Cloudinary como con imágenes locales.
+
+        const imagenOriginal = preview.getAttribute("data-original-src");
 
         if (imagenOriginal) {
-            preview.src = "<%=ruta%>/" + imagenOriginal;
+            preview.src = imagenOriginal;
             preview.style.display = "block";
         } else {
             preview.src = "";

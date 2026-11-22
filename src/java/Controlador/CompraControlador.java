@@ -1,4 +1,3 @@
-
 package Controlador;
 
 import java.io.IOException;
@@ -12,7 +11,6 @@ import jakarta.servlet.http.HttpSession;
 import Modelo.Compra;
 import Modelo.Usuario;
 import Modelo.Producto;
-import Modelo.Administrador;
 import java.util.ArrayList;
 
 @WebServlet(name = "CompraControlador", urlPatterns = {"/CompraControlador"})
@@ -42,14 +40,14 @@ public class CompraControlador extends HttpServlet {
 
         switch (op) {
 
-            case 1: // REGISTRAR COMPRA COMPLETA
+            case 1: // REGISTRAR COMPRA COMPLETA - SOLO COMPRADOR
 
                 HttpSession sesion = request.getSession(false);
 
                 if (sesion == null || sesion.getAttribute("usuario") == null) {
 
                     response.sendRedirect(
-                        contexto + "/Vista/Login/Usuario/LoginUsuAntiguo.jsp"
+                        contexto + "/Vista/Principal.jsp"
                     );
 
                     return;
@@ -95,7 +93,19 @@ public class CompraControlador extends HttpServlet {
 
                 break;
 
-            case 2: // LISTAR COMPRAS PARA ADMINISTRADOR
+            case 2: // LISTAR COMPRAS - SOLO ADMINISTRADOR
+
+                HttpSession sesionLista = request.getSession(false);
+
+                if (sesionLista == null
+                        || sesionLista.getAttribute("administrador") == null) {
+
+                    response.sendRedirect(
+                        contexto + "/Vista/Login/Admin/Login.jsp"
+                    );
+
+                    return;
+                }
 
                 ArrayList<Compra> lista = objCompra.ListarCompra();
 
@@ -107,7 +117,19 @@ public class CompraControlador extends HttpServlet {
 
                 break;
 
-            case 3: // ESTADÍSTICAS DE VENTAS
+            case 3: // ESTADÍSTICAS DE VENTAS - SOLO ADMINISTRADOR
+
+                HttpSession sesionEstadisticas = request.getSession(false);
+
+                if (sesionEstadisticas == null
+                        || sesionEstadisticas.getAttribute("administrador") == null) {
+
+                    response.sendRedirect(
+                        contexto + "/Vista/Login/Admin/Login.jsp"
+                    );
+
+                    return;
+                }
 
                 int totalCompras = objCompra.TotalCompras();
 
@@ -125,7 +147,7 @@ public class CompraControlador extends HttpServlet {
 
                 break;
 
-            case 4: // MIS COMPRAS DEL USUARIO
+            case 4: // MIS COMPRAS DEL USUARIO - SOLO COMPRADOR
 
                 HttpSession sesionComprador = request.getSession(false);
 
@@ -133,7 +155,7 @@ public class CompraControlador extends HttpServlet {
                         || sesionComprador.getAttribute("usuario") == null) {
 
                     response.sendRedirect(
-                        contexto + "/Vista/Login/Usuario/LoginUsuAntiguo.jsp"
+                        contexto + "/Vista/Principal.jsp"
                     );
 
                     return;
@@ -153,7 +175,7 @@ public class CompraControlador extends HttpServlet {
 
                 break;
 
-            case 5: // ACTUALIZAR ESTADO DE UNA COMPRA
+            case 5: // ACTUALIZAR ESTADO DE UNA COMPRA - SOLO ADMINISTRADOR
 
                 HttpSession sesionAdmin = request.getSession(false);
 
@@ -171,10 +193,25 @@ public class CompraControlador extends HttpServlet {
                 String nuevoEstado = request.getParameter("estado");
 
                 try {
+
                     idCompra = Integer.parseInt(
                         request.getParameter("txtidcompra")
                     );
+
+                    if (idCompra <= 0) {
+                        throw new NumberFormatException();
+                    }
+
                 } catch (NumberFormatException e) {
+
+                    response.sendRedirect(
+                        contexto + "/CompraControlador?op=2&actualizado=0"
+                    );
+
+                    return;
+                }
+
+                if (nuevoEstado == null || nuevoEstado.trim().isEmpty()) {
 
                     response.sendRedirect(
                         contexto + "/CompraControlador?op=2&actualizado=0"
@@ -196,7 +233,9 @@ public class CompraControlador extends HttpServlet {
 
             default:
 
-                response.sendRedirect(contexto + "/Vista/Principal.jsp");
+                response.sendRedirect(
+                    contexto + "/Vista/Principal.jsp"
+                );
 
                 break;
         }

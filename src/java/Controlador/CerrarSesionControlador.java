@@ -20,7 +20,7 @@ public class CerrarSesionControlador extends HttpServlet {
         HttpSession sesion = request.getSession(false);
 
         if (sesion != null) {
-            sesion.removeAttribute("usuario");
+            sesion.invalidate();
         }
 
         response.sendRedirect(

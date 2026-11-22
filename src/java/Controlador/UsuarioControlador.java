@@ -1,4 +1,3 @@
-
 package Controlador;
 
 import java.io.IOException;
@@ -22,13 +21,27 @@ public class UsuarioControlador extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setContentType("text/html;charset=UTF-8");
 
-        int op = Integer.parseInt(request.getParameter("op"));
+        String parametroOp = request.getParameter("op");
+
+        if (parametroOp == null || parametroOp.trim().isEmpty()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Operación no especificada");
+            return;
+        }
+
+        int op;
+
+        try {
+            op = Integer.parseInt(parametroOp);
+        } catch (NumberFormatException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Operación inválida");
+            return;
+        }
 
         Usuario objUsuario = new Usuario();
 
         switch (op) {
 
-            case 1: // REGISTRAR USUARIO
+            case 1: // REGISTRAR USUARIO - PÚBLICO
 
                 String nombre = request.getParameter("txtnombre");
                 String apellido = request.getParameter("txtapellido");
@@ -56,7 +69,16 @@ public class UsuarioControlador extends HttpServlet {
 
                 break;
 
-            case 2: // LISTAR USUARIOS
+            case 2: // LISTAR USUARIOS - SOLO ADMINISTRADOR
+
+                HttpSession sesionAdmin = request.getSession(false);
+
+                if (sesionAdmin == null || sesionAdmin.getAttribute("administrador") == null) {
+                    response.sendRedirect(
+                        request.getContextPath() + "/Vista/Login/Admin/Login.jsp"
+                    );
+                    return;
+                }
 
                 ArrayList<Usuario> lista = objUsuario.ListarUsuario();
 
@@ -68,9 +90,44 @@ public class UsuarioControlador extends HttpServlet {
 
                 break;
 
-            case 3: // ELIMINAR USUARIO
+            case 3: // ELIMINAR USUARIO - SOLO ADMINISTRADOR
 
-                int id = Integer.parseInt(request.getParameter("txtid"));
+                HttpSession sesionEliminar = request.getSession(false);
+
+                if (sesionEliminar == null || sesionEliminar.getAttribute("administrador") == null) {
+                    response.sendRedirect(
+                        request.getContextPath() + "/Vista/Login/Admin/Login.jsp"
+                    );
+                    return;
+                }
+
+                int id;
+
+                try {
+                    id = Integer.parseInt(request.getParameter("txtid"));
+
+                    if (id <= 0) {
+                        throw new NumberFormatException();
+                    }
+
+                } catch (NumberFormatException e) {
+
+                    request.setAttribute(
+                        "mensaje",
+                        "El código del usuario no es válido."
+                    );
+
+                    request.setAttribute(
+                        "listaUsuarios",
+                        objUsuario.ListarUsuario()
+                    );
+
+                    request.getRequestDispatcher(
+                        "/Vista/Admin/GestionUsuarios.jsp"
+                    ).forward(request, response);
+
+                    return;
+                }
 
                 int eliminado = objUsuario.eliminar(id);
 
@@ -90,13 +147,13 @@ public class UsuarioControlador extends HttpServlet {
 
                 break;
 
-            case 4: // ACTUALIZAR DATOS DEL COMPRADOR
+            case 4: // ACTUALIZAR DATOS DEL COMPRADOR - SOLO CONSUMIDOR
 
                 HttpSession sesion = request.getSession(false);
 
                 if (sesion == null || sesion.getAttribute("usuario") == null) {
                     response.sendRedirect(
-                        request.getContextPath() + "/Vista/Login/Usuario/LoginUsuAntiguo.jsp"
+                        request.getContextPath() + "/Vista/Principal.jsp"
                     );
                     return;
                 }
@@ -115,8 +172,6 @@ public class UsuarioControlador extends HttpServlet {
                 String nuevaContraseña = request.getParameter("txtcontraseña");
                 String confirmarContraseña = request.getParameter("txtconfirmarcontraseña");
 
-                // VALIDAR QUE LAS CONTRASEÑAS COINCIDAN
-
                 if (nuevaContraseña == null) {
                     nuevaContraseña = "";
                 }
@@ -124,6 +179,8 @@ public class UsuarioControlador extends HttpServlet {
                 if (confirmarContraseña == null) {
                     confirmarContraseña = "";
                 }
+
+                // VALIDAR QUE LAS CONTRASEÑAS COINCIDAN
 
                 if (!nuevaContraseña.isEmpty() || !confirmarContraseña.isEmpty()) {
 
@@ -198,6 +255,15 @@ public class UsuarioControlador extends HttpServlet {
                 request.getRequestDispatcher(
                     "/Vista/Comprador/MiCuenta.jsp"
                 ).forward(request, response);
+
+                break;
+
+            default:
+
+                response.sendError(
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    "Operación no válida"
+                );
 
                 break;
         }

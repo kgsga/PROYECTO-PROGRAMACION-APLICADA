@@ -46,8 +46,6 @@
             min-height: 100vh;
         }
 
-        /* MENÚ LATERAL */
-
         .sidebar {
             width: 250px;
             min-width: 250px;
@@ -104,8 +102,6 @@
             color: white;
         }
 
-        /* CERRAR SESIÓN */
-
         .cerrar {
             margin-top: 15px;
             padding-top: 0;
@@ -125,8 +121,6 @@
         .cerrar button:hover {
             background: #c93629;
         }
-
-        /* COLUMNA PRINCIPAL */
 
         .columna-principal {
             flex: 1;
@@ -170,8 +164,6 @@
             white-space: nowrap;
         }
 
-        /* BOTÓN VOLVER */
-
         .volver {
             display: inline-block;
             margin-bottom: 22px;
@@ -184,8 +176,6 @@
         .volver:hover {
             text-decoration: underline;
         }
-
-        /* PANEL */
 
         .panel {
             background: white;
@@ -215,8 +205,6 @@
             font-size: 12px;
             font-weight: bold;
         }
-
-        /* PRODUCTOS */
 
         .lista-productos {
             display: flex;
@@ -315,8 +303,6 @@
             font-size: 16px !important;
         }
 
-        /* RESUMEN TOTAL */
-
         .resumen-total {
             margin-top: 25px;
             background: #fff;
@@ -339,8 +325,6 @@
             font-size: 23px;
         }
 
-        /* SIN PRODUCTOS */
-
         .vacio {
             text-align: center;
             padding: 55px 15px;
@@ -362,8 +346,6 @@
             font-size: 13px;
         }
 
-        /* PIE DE PÁGINA */
-
         footer {
             text-align: center;
             padding: 20px;
@@ -371,8 +353,6 @@
             font-size: 12px;
             width: 100%;
         }
-
-        /* RESPONSIVE */
 
         @media(max-width: 900px) {
             .contenedor {
@@ -434,8 +414,6 @@
 <body>
 
 <div class="contenedor">
-
-    <!-- MENÚ LATERAL -->
 
     <aside class="sidebar">
 
@@ -502,8 +480,6 @@
 
     </aside>
 
-    <!-- COLUMNA PRINCIPAL -->
-
     <div class="columna-principal">
 
         <main class="contenido">
@@ -554,18 +530,31 @@
                             String rutaImagen = "";
 
                             if (!imagenProducto.isEmpty()) {
-                                imagenProducto = imagenProducto.replace("\\", "/");
 
-                                while (imagenProducto.startsWith("/")) {
-                                    imagenProducto = imagenProducto.substring(1);
-                                }
+                                // IMÁGENES DE CLOUDINARY
+                                if (imagenProducto.startsWith("https://")
+                                        || imagenProducto.startsWith("http://")) {
 
-                                if (imagenProducto.startsWith("Imagenes/")) {
-                                    rutaImagen = ruta + "/" + imagenProducto;
-                                } else if (imagenProducto.startsWith("ImagenesProductos/")) {
-                                    rutaImagen = ruta + "/Imagenes/" + imagenProducto;
+                                    rutaImagen = imagenProducto;
+
                                 } else {
-                                    rutaImagen = ruta + "/Imagenes/ImagenesProductos/" + imagenProducto;
+
+                                    // IMÁGENES ANTIGUAS GUARDADAS LOCALMENTE
+                                    imagenProducto = imagenProducto.replace("\\", "/");
+
+                                    while (imagenProducto.startsWith("/")) {
+                                        imagenProducto = imagenProducto.substring(1);
+                                    }
+
+                                    if (imagenProducto.startsWith("Imagenes/")) {
+                                        rutaImagen = ruta + "/" + imagenProducto;
+
+                                    } else if (imagenProducto.startsWith("ImagenesProductos/")) {
+                                        rutaImagen = ruta + "/Imagenes/" + imagenProducto;
+
+                                    } else {
+                                        rutaImagen = ruta + "/Imagenes/ImagenesProductos/" + imagenProducto;
+                                    }
                                 }
                             }
                         %>
@@ -665,3 +654,4 @@
 
 </body>
 </html>
+

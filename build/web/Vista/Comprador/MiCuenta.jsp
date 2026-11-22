@@ -6,7 +6,7 @@
     Usuario usuario = (Usuario) session.getAttribute("usuario");
 
     if (usuario == null) {
-        response.sendRedirect(request.getContextPath() + "/Vista/Login/Usuario/LoginUsuAntiguo.jsp");
+        response.sendRedirect(request.getContextPath() + "/Vista/Principal.jsp");
         return;
     }
 

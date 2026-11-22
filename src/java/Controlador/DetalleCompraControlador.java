@@ -1,4 +1,3 @@
-
 package Controlador;
 
 import java.io.IOException;
@@ -7,6 +6,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import Modelo.DetalleCompra;
 import java.util.ArrayList;
@@ -20,13 +20,29 @@ public class DetalleCompraControlador extends HttpServlet {
 
         response.setContentType("text/html;charset=UTF-8");
 
-        int op = Integer.parseInt(request.getParameter("op"));
+        HttpSession sesion = request.getSession(false);
 
-        DetalleCompra objDetalle = new DetalleCompra();
+        int op;
+
+        try {
+            op = Integer.parseInt(request.getParameter("op"));
+        } catch (NumberFormatException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
 
         switch (op) {
 
             case 1: // REGISTRAR DETALLE DE COMPRA
+
+                if (sesion == null || sesion.getAttribute("usuario") == null) {
+                    response.sendRedirect(
+                        request.getContextPath() + "/Vista/Principal.jsp"
+                    );
+                    return;
+                }
+
+                DetalleCompra objDetalle = new DetalleCompra();
 
                 int idCompra = Integer.parseInt(request.getParameter("txtidcompra"));
                 int idProducto = Integer.parseInt(request.getParameter("txtidproducto"));
@@ -51,10 +67,19 @@ public class DetalleCompraControlador extends HttpServlet {
 
             case 2: // LISTAR DETALLES DE UNA COMPRA
 
+                if (sesion == null || sesion.getAttribute("administrador") == null) {
+                    response.sendRedirect(
+                        request.getContextPath() + "/Vista/Login/Admin/Login.jsp"
+                    );
+                    return;
+                }
+
+                DetalleCompra objDetalleAdmin = new DetalleCompra();
+
                 int id = Integer.parseInt(request.getParameter("txtidcompra"));
 
                 ArrayList<DetalleCompra> lista =
-                    objDetalle.ListarDetalleCompra(id);
+                    objDetalleAdmin.ListarDetalleCompra(id);
 
                 request.setAttribute("lista", lista);
 
@@ -62,6 +87,10 @@ public class DetalleCompraControlador extends HttpServlet {
                     "/Vista/Admin/DetalleCompra.jsp"
                 ).forward(request, response);
 
+                break;
+
+            default:
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
                 break;
         }
     }

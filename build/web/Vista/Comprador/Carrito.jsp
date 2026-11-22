@@ -9,7 +9,7 @@
     Usuario usuario = (Usuario) session.getAttribute("usuario");
 
     if (usuario == null) {
-        response.sendRedirect(request.getContextPath() + "/Vista/Login/Usuario/LoginUsuAntiguo.jsp");
+        response.sendRedirect(request.getContextPath() + "/Vista/Principal.jsp");
         return;
     }
 
@@ -894,7 +894,7 @@
 
                         double subtotal = p.precio * p.cantidad;
 
-                        // CORRECCIÓN DE LA RUTA DE LA IMAGEN
+                        // OBTENER LA RUTA CORRECTA DE LA IMAGEN
                         String nombreImagen =
                             p.imagen != null ? p.imagen.trim() : "";
 
@@ -902,28 +902,38 @@
 
                         if (!nombreImagen.isEmpty()) {
 
-                            nombreImagen =
-                                nombreImagen.replace("\\", "/");
+                            // IMÁGENES GUARDADAS EN CLOUDINARY
+                            if (nombreImagen.startsWith("https://")
+                                    || nombreImagen.startsWith("http://")) {
 
-                            while (nombreImagen.startsWith("/")) {
-                                nombreImagen = nombreImagen.substring(1);
-                            }
-
-                            if (nombreImagen.startsWith("Imagenes/")) {
-
-                                rutaImagenProducto =
-                                    ruta + "/" + nombreImagen;
-
-                            } else if (nombreImagen.startsWith("ImagenesProductos/")) {
-
-                                rutaImagenProducto =
-                                    ruta + "/Imagenes/" + nombreImagen;
+                                rutaImagenProducto = nombreImagen;
 
                             } else {
 
-                                rutaImagenProducto =
-                                    ruta + "/Imagenes/ImagenesProductos/"
-                                    + nombreImagen;
+                                // IMÁGENES ANTIGUAS GUARDADAS LOCALMENTE
+                                nombreImagen =
+                                    nombreImagen.replace("\\", "/");
+
+                                while (nombreImagen.startsWith("/")) {
+                                    nombreImagen = nombreImagen.substring(1);
+                                }
+
+                                if (nombreImagen.startsWith("Imagenes/")) {
+
+                                    rutaImagenProducto =
+                                        ruta + "/" + nombreImagen;
+
+                                } else if (nombreImagen.startsWith("ImagenesProductos/")) {
+
+                                    rutaImagenProducto =
+                                        ruta + "/Imagenes/" + nombreImagen;
+
+                                } else {
+
+                                    rutaImagenProducto =
+                                        ruta + "/Imagenes/ImagenesProductos/"
+                                        + nombreImagen;
+                                }
                             }
                         }
                 %>

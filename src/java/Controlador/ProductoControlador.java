@@ -1,12 +1,8 @@
-
 package Controlador;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.UUID;
+import java.io.InputStream;
+import java.util.Map;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -14,10 +10,12 @@ import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 
 import Modelo.Producto;
 import Modelo.Categoria;
+import Util.Cloudinary;
 
 @WebServlet(name = "ProductoControlador", urlPatterns = {"/ProductoControlador"})
 
@@ -29,65 +27,16 @@ import Modelo.Categoria;
 
 public class ProductoControlador extends HttpServlet {
 
-    // Excepción propia para identificar formatos no admitidos
+    // Excepción para formatos de imagen no admitidos
     private static class FormatoImagenException extends Exception {
         public FormatoImagenException(String mensaje) {
             super(mensaje);
         }
     }
 
-    // Obtener la carpeta de imágenes del proyecto y la de ejecución
-    private File[] obtenerCarpetasImagenes() throws ServletException {
-
-        String rutaDesplegada = getServletContext().getRealPath(
-            "/Imagenes/ImagenesProductos"
-        );
-
-        if (rutaDesplegada == null) {
-            throw new ServletException(
-                "No se pudo localizar la carpeta de imágenes desplegada."
-            );
-        }
-
-        File carpetaDesplegada = new File(rutaDesplegada);
-
-        File carpetaWeb = carpetaDesplegada.getParentFile().getParentFile();
-        File carpetaBuild = carpetaWeb.getParentFile();
-
-        if (!carpetaWeb.getName().equalsIgnoreCase("web")
-                || !carpetaBuild.getName().equalsIgnoreCase("build")) {
-
-            throw new ServletException(
-                "No se pudo identificar la estructura del proyecto. "
-                + "Carpeta encontrada: " + rutaDesplegada
-            );
-        }
-
-        File proyecto = carpetaBuild.getParentFile();
-
-        File carpetaFuente = new File(
-            proyecto,
-            "web/Imagenes/ImagenesProductos"
-        );
-
-        if (!carpetaFuente.exists() && !carpetaFuente.mkdirs()) {
-            throw new ServletException(
-                "No se pudo crear la carpeta de imágenes del proyecto."
-            );
-        }
-
-        if (!carpetaDesplegada.exists() && !carpetaDesplegada.mkdirs()) {
-            throw new ServletException(
-                "No se pudo crear la carpeta de imágenes desplegada."
-            );
-        }
-
-        return new File[] {carpetaFuente, carpetaDesplegada};
-    }
-
-    // Guardar la imagen en ambas carpetas
-    private String guardarImagen(Part archivo)
-            throws IOException, ServletException, FormatoImagenException {
+    // Validar y subir imagen a Cloudinary
+    private Map<String, String> guardarImagen(Part archivo)
+            throws Exception {
 
         if (archivo == null || archivo.getSize() == 0) {
             return null;
@@ -105,20 +54,18 @@ public class ProductoControlador extends HttpServlet {
             nombreOriginal.lastIndexOf(".")
         ).toLowerCase();
 
-        // Formatos admitidos
-        if (!(extension.equals(".jpg") ||
-              extension.equals(".jpeg") ||
-              extension.equals(".png") ||
-              extension.equals(".gif") ||
-              extension.equals(".webp"))) {
+        if (!(extension.equals(".jpg")
+                || extension.equals(".jpeg")
+                || extension.equals(".png")
+                || extension.equals(".gif")
+                || extension.equals(".webp"))) {
 
             throw new FormatoImagenException(
                 "Formato de imagen no admitido. "
-                + "Selecciona una imagen JPG, JPEG, PNG, GIF o WEBP."
+                + "Selecciona JPG, JPEG, PNG, GIF o WEBP."
             );
         }
 
-        // Comprobar el tipo de contenido cuando el navegador lo proporciona
         String tipo = archivo.getContentType();
 
         if (tipo != null && tipo.startsWith("image/")) {
@@ -140,37 +87,28 @@ public class ProductoControlador extends HttpServlet {
             }
         }
 
-        String nombreArchivo = UUID.randomUUID().toString() + extension;
+        // Subir la imagen a Cloudinary
+        try (InputStream entrada = archivo.getInputStream()) {
+            return Cloudinary.subirImagen(entrada);
+        }
+    }
 
-        File[] carpetas = obtenerCarpetasImagenes();
+    // Eliminar imagen de Cloudinary sin interrumpir la operación
+    private boolean eliminarImagenCloudinary(String publicId) {
 
-        File carpetaFuente = carpetas[0];
-        File carpetaDesplegada = carpetas[1];
-
-        File imagenFuente = new File(carpetaFuente, nombreArchivo);
-        File imagenDesplegada = new File(carpetaDesplegada, nombreArchivo);
-
-        // Guardar primero en la carpeta permanente del proyecto
-        try (java.io.InputStream entrada = archivo.getInputStream()) {
-            Files.copy(
-                entrada,
-                imagenFuente.toPath(),
-                StandardCopyOption.REPLACE_EXISTING
-            );
+        if (publicId == null || publicId.trim().isEmpty()) {
+            return true;
         }
 
-        // Copiar también a la carpeta desde donde trabaja el JSP
-        if (!imagenFuente.getCanonicalPath().equals(
-                imagenDesplegada.getCanonicalPath())) {
-
-            Files.copy(
-                imagenFuente.toPath(),
-                imagenDesplegada.toPath(),
-                StandardCopyOption.REPLACE_EXISTING
+        try {
+            return Cloudinary.eliminarImagen(publicId);
+        } catch (Exception e) {
+            System.out.println(
+                "No se pudo eliminar la imagen de Cloudinary: "
+                + e.getMessage()
             );
+            return false;
         }
-
-        return "Imagenes/ImagenesProductos/" + nombreArchivo;
     }
 
     // Cargar la vista de gestión de productos
@@ -181,15 +119,31 @@ public class ProductoControlador extends HttpServlet {
         Producto objProducto = new Producto();
         Categoria objCategoria = new Categoria();
 
-        ArrayList<Producto> lista = objProducto.ListarProducto();
-        ArrayList<Categoria> categorias = objCategoria.ListarCategorias();
+        request.setAttribute(
+            "lista",
+            objProducto.ListarProducto()
+        );
 
-        request.setAttribute("lista", lista);
-        request.setAttribute("categorias", categorias);
+        request.setAttribute(
+            "categorias",
+            objCategoria.ListarCategorias()
+        );
 
         request.getRequestDispatcher(
             "/Vista/Admin/GestionProductos.jsp"
         ).forward(request, response);
+    }
+
+    // Mostrar mensaje de error y volver a la gestión
+    private void mostrarError(HttpServletRequest request,
+                              HttpServletResponse response,
+                              String mensaje)
+            throws ServletException, IOException {
+
+        request.setAttribute("mensaje", mensaje);
+        request.setAttribute("tipoMensaje", "error");
+
+        cargarVista(request, response);
     }
 
     protected void processRequest(HttpServletRequest request,
@@ -199,60 +153,118 @@ public class ProductoControlador extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setContentType("text/html;charset=UTF-8");
 
-        String operacion = request.getParameter("op");
+        // Todas las operaciones requieren administrador
+        HttpSession sesion = request.getSession(false);
 
-        if (operacion == null) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        if (sesion == null
+                || sesion.getAttribute("administrador") == null) {
+
+            response.sendRedirect(
+                request.getContextPath()
+                + "/Vista/Login/Admin/Login.jsp"
+            );
+
             return;
         }
 
-        int op = Integer.parseInt(operacion);
+        String operacion = request.getParameter("op");
+
+        int op;
+
+        try {
+            op = Integer.parseInt(operacion);
+        } catch (NumberFormatException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
 
         Producto objProducto = new Producto();
 
         switch (op) {
 
-            // Mostrar productos
+            // LISTAR PRODUCTOS
             case 1:
+
                 cargarVista(request, response);
                 break;
 
-            // Registrar producto
+            // REGISTRAR PRODUCTO
             case 2:
 
                 String nombre = request.getParameter("txtnombre");
                 String descripcion = request.getParameter("txtdescripcion");
 
-                double precio = Double.parseDouble(
-                    request.getParameter("txtprecio")
-                );
-
-                int stock = Integer.parseInt(
-                    request.getParameter("txtstock")
-                );
-
-                int idCategoria = Integer.parseInt(
-                    request.getParameter("txtcategoria")
-                );
-
-                Part archivoNuevo = request.getPart("archivoImagen");
-
-                String imagen;
+                double precio;
+                int stock;
+                int idCategoria;
 
                 try {
-                    imagen = guardarImagen(archivoNuevo);
-                } catch (FormatoImagenException e) {
+                    precio = Double.parseDouble(
+                        request.getParameter("txtprecio")
+                    );
 
-                    request.setAttribute("mensaje", e.getMessage());
-                    request.setAttribute("tipoMensaje", "error");
+                    stock = Integer.parseInt(
+                        request.getParameter("txtstock")
+                    );
 
-                    cargarVista(request, response);
+                    idCategoria = Integer.parseInt(
+                        request.getParameter("txtcategoria")
+                    );
+
+                } catch (Exception e) {
+                    mostrarError(
+                        request,
+                        response,
+                        "Los datos numéricos del producto no son válidos."
+                    );
                     return;
                 }
 
-                if (imagen == null) {
-                    imagen = "";
+                if (precio <= 0 || stock < 0) {
+                    mostrarError(
+                        request,
+                        response,
+                        "El precio debe ser mayor que cero y el stock no puede ser negativo."
+                    );
+                    return;
                 }
+
+                Part archivoNuevo = request.getPart("archivoImagen");
+
+                if (archivoNuevo == null || archivoNuevo.getSize() == 0) {
+                    mostrarError(
+                        request,
+                        response,
+                        "Debes seleccionar una imagen para el producto."
+                    );
+                    return;
+                }
+
+                Map<String, String> imagenSubida;
+
+                try {
+                    imagenSubida = guardarImagen(archivoNuevo);
+
+                } catch (FormatoImagenException e) {
+                    mostrarError(request, response, e.getMessage());
+                    return;
+
+                } catch (Exception e) {
+                    System.out.println(
+                        "Error al subir imagen: " + e.getMessage()
+                    );
+
+                    mostrarError(
+                        request,
+                        response,
+                        "No se pudo subir la imagen a Cloudinary. "
+                        + "Verifica la configuración e inténtalo nuevamente."
+                    );
+                    return;
+                }
+
+                String imagen = imagenSubida.get("url");
+                String publicId = imagenSubida.get("public_id");
 
                 boolean resultado = objProducto.Insertar(
                     nombre,
@@ -260,19 +272,27 @@ public class ProductoControlador extends HttpServlet {
                     precio,
                     stock,
                     imagen,
+                    publicId,
                     idCategoria
                 );
 
                 if (resultado) {
+
                     request.setAttribute(
                         "mensaje",
-                        "Producto registrado correctamente"
+                        "Producto registrado correctamente."
                     );
                     request.setAttribute("tipoMensaje", "exito");
+
                 } else {
+
+                    // Si no se guardó en la base de datos,
+                    // eliminar la imagen que acabamos de subir.
+                    eliminarImagenCloudinary(publicId);
+
                     request.setAttribute(
                         "mensaje",
-                        "No se pudo registrar el producto"
+                        "No se pudo registrar el producto."
                     );
                     request.setAttribute("tipoMensaje", "error");
                 }
@@ -280,47 +300,97 @@ public class ProductoControlador extends HttpServlet {
                 cargarVista(request, response);
                 break;
 
-            // Modificar producto
+            // MODIFICAR PRODUCTO
             case 3:
 
-                int id = Integer.parseInt(
-                    request.getParameter("txtid")
-                );
+                int id;
 
-                String nombreModificar = request.getParameter("txtnombre");
-                String descripcionModificar = request.getParameter("txtdescripcion");
-
-                double precioModificar = Double.parseDouble(
-                    request.getParameter("txtprecio")
-                );
-
-                int stockModificar = Integer.parseInt(
-                    request.getParameter("txtstock")
-                );
-
-                int categoriaModificar = Integer.parseInt(
-                    request.getParameter("txtcategoria")
-                );
-
-                String imagenModificar = request.getParameter("txtimagen");
-
-                Part archivoModificar = request.getPart("archivoImagen");
-
-                String nuevaImagen;
+                double precioModificar;
+                int stockModificar;
+                int categoriaModificar;
 
                 try {
-                    nuevaImagen = guardarImagen(archivoModificar);
-                } catch (FormatoImagenException e) {
+                    id = Integer.parseInt(
+                        request.getParameter("txtid")
+                    );
 
-                    request.setAttribute("mensaje", e.getMessage());
-                    request.setAttribute("tipoMensaje", "error");
+                    precioModificar = Double.parseDouble(
+                        request.getParameter("txtprecio")
+                    );
 
-                    cargarVista(request, response);
+                    stockModificar = Integer.parseInt(
+                        request.getParameter("txtstock")
+                    );
+
+                    categoriaModificar = Integer.parseInt(
+                        request.getParameter("txtcategoria")
+                    );
+
+                } catch (Exception e) {
+                    mostrarError(
+                        request,
+                        response,
+                        "Los datos del producto no son válidos."
+                    );
                     return;
                 }
 
-                if (nuevaImagen != null) {
-                    imagenModificar = nuevaImagen;
+                if (precioModificar <= 0 || stockModificar < 0) {
+                    mostrarError(
+                        request,
+                        response,
+                        "El precio debe ser mayor que cero y el stock no puede ser negativo."
+                    );
+                    return;
+                }
+
+                String nombreModificar =
+                    request.getParameter("txtnombre");
+
+                String descripcionModificar =
+                    request.getParameter("txtdescripcion");
+
+                // Recuperar el public_id de la imagen anterior
+                String publicIdAnterior =
+                    objProducto.obtenerPublicId(id);
+
+                // Mantener la URL y el public_id anteriores
+                String imagenModificar =
+                    request.getParameter("txtimagen");
+
+                String publicIdModificar = publicIdAnterior;
+
+                Part archivoModificar =
+                    request.getPart("archivoImagen");
+
+                Map<String, String> nuevaImagen = null;
+
+                // Solo subir una imagen si el administrador seleccionó otra
+                if (archivoModificar != null
+                        && archivoModificar.getSize() > 0) {
+
+                    try {
+                        nuevaImagen = guardarImagen(archivoModificar);
+
+                    } catch (FormatoImagenException e) {
+                        mostrarError(request, response, e.getMessage());
+                        return;
+
+                    } catch (Exception e) {
+                        System.out.println(
+                            "Error al subir nueva imagen: " + e.getMessage()
+                        );
+
+                        mostrarError(
+                            request,
+                            response,
+                            "No se pudo subir la nueva imagen a Cloudinary."
+                        );
+                        return;
+                    }
+
+                    imagenModificar = nuevaImagen.get("url");
+                    publicIdModificar = nuevaImagen.get("public_id");
                 }
 
                 boolean modificado = objProducto.Modificar(
@@ -330,19 +400,56 @@ public class ProductoControlador extends HttpServlet {
                     precioModificar,
                     stockModificar,
                     imagenModificar,
+                    publicIdModificar,
                     categoriaModificar
                 );
 
                 if (modificado) {
-                    request.setAttribute(
-                        "mensaje",
-                        "Producto modificado correctamente"
-                    );
-                    request.setAttribute("tipoMensaje", "exito");
+
+                    // Eliminar la imagen anterior únicamente después
+                    // de confirmar que la modificación se guardó.
+                    if (nuevaImagen != null
+                            && publicIdAnterior != null
+                            && !publicIdAnterior.equals(publicIdModificar)) {
+
+                        boolean eliminada =
+                            eliminarImagenCloudinary(publicIdAnterior);
+
+                        if (!eliminada) {
+                            request.setAttribute(
+                                "mensaje",
+                                "Producto modificado, pero no se pudo eliminar la imagen anterior de Cloudinary."
+                            );
+                            request.setAttribute("tipoMensaje", "error");
+                        } else {
+                            request.setAttribute(
+                                "mensaje",
+                                "Producto modificado correctamente."
+                            );
+                            request.setAttribute("tipoMensaje", "exito");
+                        }
+
+                    } else {
+                        request.setAttribute(
+                            "mensaje",
+                            "Producto modificado correctamente."
+                        );
+                        request.setAttribute("tipoMensaje", "exito");
+                    }
+
                 } else {
+
+                    // Si falló la modificación, conservar la imagen anterior
+                    // y eliminar la nueva que se había subido.
+                    if (nuevaImagen != null) {
+                        eliminarImagenCloudinary(
+                            nuevaImagen.get("public_id")
+                        );
+                    }
+
                     request.setAttribute(
                         "mensaje",
-                        "No se pudo modificar el producto"
+                        "No se pudo modificar el producto."
                     );
                     request.setAttribute("tipoMensaje", "error");
                 }
@@ -350,25 +457,53 @@ public class ProductoControlador extends HttpServlet {
                 cargarVista(request, response);
                 break;
 
-            // Eliminar producto
+            // ELIMINAR PRODUCTO
             case 4:
 
-                int idEliminar = Integer.parseInt(
-                    request.getParameter("txtid")
-                );
+                int idEliminar;
+
+                try {
+                    idEliminar = Integer.parseInt(
+                        request.getParameter("txtid")
+                    );
+                } catch (Exception e) {
+                    mostrarError(
+                        request,
+                        response,
+                        "El código del producto no es válido."
+                    );
+                    return;
+                }
+
+                // Obtener la imagen antes de eliminar el registro
+                String publicIdEliminar =
+                    objProducto.obtenerPublicId(idEliminar);
 
                 int eliminado = objProducto.eliminar(idEliminar);
 
                 if (eliminado > 0) {
-                    request.setAttribute(
-                        "mensaje",
-                        "Producto eliminado correctamente"
-                    );
-                    request.setAttribute("tipoMensaje", "exito");
+
+                    boolean imagenEliminada =
+                        eliminarImagenCloudinary(publicIdEliminar);
+
+                    if (imagenEliminada) {
+                        request.setAttribute(
+                            "mensaje",
+                            "Producto eliminado correctamente."
+                        );
+                        request.setAttribute("tipoMensaje", "exito");
+                    } else {
+                        request.setAttribute(
+                            "mensaje",
+                            "Producto eliminado de la base de datos, pero no se pudo eliminar su imagen de Cloudinary."
+                        );
+                        request.setAttribute("tipoMensaje", "error");
+                    }
+
                 } else {
                     request.setAttribute(
                         "mensaje",
-                        "No se pudo eliminar el producto"
+                        "No se pudo eliminar el producto."
                     );
                     request.setAttribute("tipoMensaje", "error");
                 }
@@ -377,7 +512,10 @@ public class ProductoControlador extends HttpServlet {
                 break;
 
             default:
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+
+                response.sendError(
+                    HttpServletResponse.SC_BAD_REQUEST
+                );
                 break;
         }
     }

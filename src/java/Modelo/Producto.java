@@ -12,6 +12,7 @@ public class Producto {
     public double precio;
     public int stock;
     public String imagen;
+    public String public_id;
     public int cantidad;
 
     public int id_categoria;
@@ -42,14 +43,18 @@ public class Producto {
                 objProducto.precio = rs.getDouble("precio");
                 objProducto.stock = rs.getInt("stock");
                 objProducto.imagen = rs.getString("imagen");
+                objProducto.public_id = rs.getString("public_id");
                 objProducto.id_categoria = rs.getInt("id_categoria");
-                objProducto.nombre_categoria = rs.getString("nombre_categoria");
+                objProducto.nombre_categoria =
+                    rs.getString("nombre_categoria");
 
                 lista.add(objProducto);
             }
 
         } catch (Exception e) {
-            System.out.println("Error al listar productos: " + e.getMessage());
+            System.out.println(
+                "Error al listar productos: " + e.getMessage()
+            );
         }
 
         return lista;
@@ -58,11 +63,11 @@ public class Producto {
     // AGREGAR PRODUCTO
     public boolean Insertar(String nombre, String descripcion,
                             double precio, int stock, String imagen,
-                            int id_categoria) {
+                            String publicId, int id_categoria) {
 
         String sql = "INSERT INTO productos "
-                   + "(nombre, descripcion, precio, stock, imagen, id_categoria) "
-                   + "VALUES (?, ?, ?, ?, ?, ?)";
+                   + "(nombre, descripcion, precio, stock, imagen, public_id, id_categoria) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection cn = ConexionBD.getConexionBD();
              PreparedStatement pt = cn.prepareStatement(sql)) {
@@ -72,12 +77,15 @@ public class Producto {
             pt.setDouble(3, precio);
             pt.setInt(4, stock);
             pt.setString(5, imagen);
-            pt.setInt(6, id_categoria);
+            pt.setString(6, publicId);
+            pt.setInt(7, id_categoria);
 
             return pt.executeUpdate() > 0;
 
         } catch (Exception e) {
-            System.out.println("Error al insertar producto: " + e.getMessage());
+            System.out.println(
+                "Error al insertar producto: " + e.getMessage()
+            );
             return false;
         }
     }
@@ -85,10 +93,10 @@ public class Producto {
     // MODIFICAR PRODUCTO
     public boolean Modificar(int id, String nombre, String descripcion,
                              double precio, int stock, String imagen,
-                             int id_categoria) {
+                             String publicId, int id_categoria) {
 
         String sql = "UPDATE productos SET nombre=?, descripcion=?, "
-                   + "precio=?, stock=?, imagen=?, id_categoria=? "
+                   + "precio=?, stock=?, imagen=?, public_id=?, id_categoria=? "
                    + "WHERE id_producto=?";
 
         try (Connection cn = ConexionBD.getConexionBD();
@@ -99,15 +107,45 @@ public class Producto {
             pt.setDouble(3, precio);
             pt.setInt(4, stock);
             pt.setString(5, imagen);
-            pt.setInt(6, id_categoria);
-            pt.setInt(7, id);
+            pt.setString(6, publicId);
+            pt.setInt(7, id_categoria);
+            pt.setInt(8, id);
 
             return pt.executeUpdate() > 0;
 
         } catch (Exception e) {
-            System.out.println("Error al modificar producto: " + e.getMessage());
+            System.out.println(
+                "Error al modificar producto: " + e.getMessage()
+            );
             return false;
         }
+    }
+
+    // OBTENER PUBLIC_ID DE UN PRODUCTO
+    public String obtenerPublicId(int id) {
+
+        String sql = "SELECT public_id FROM productos "
+                   + "WHERE id_producto = ?";
+
+        try (Connection cn = ConexionBD.getConexionBD();
+             PreparedStatement pt = cn.prepareStatement(sql)) {
+
+            pt.setInt(1, id);
+
+            try (ResultSet rs = pt.executeQuery()) {
+
+                if (rs.next()) {
+                    return rs.getString("public_id");
+                }
+            }
+
+        } catch (Exception e) {
+            System.out.println(
+                "Error al obtener public_id: " + e.getMessage()
+            );
+        }
+
+        return null;
     }
 
     // ELIMINAR PRODUCTO
@@ -123,7 +161,9 @@ public class Producto {
             return pt.executeUpdate();
 
         } catch (Exception e) {
-            System.out.println("Error al eliminar producto: " + e.getMessage());
+            System.out.println(
+                "Error al eliminar producto: " + e.getMessage()
+            );
             return 0;
         }
     }

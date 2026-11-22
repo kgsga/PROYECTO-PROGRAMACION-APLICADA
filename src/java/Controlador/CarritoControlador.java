@@ -2,8 +2,6 @@
 package Controlador;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 import jakarta.servlet.ServletException;
@@ -28,68 +26,26 @@ public class CarritoControlador extends HttpServlet {
 
         String contexto = request.getContextPath();
 
-        String rutaTienda = "/Vista/Comprador/Tienda.jsp";
+        String rutaTienda = contexto + "/Vista/Comprador/Tienda.jsp";
         String rutaCarrito = contexto + "/Vista/Comprador/Carrito.jsp";
-        String rutaLogin = contexto + "/Vista/Login/Usuario/LoginUsuAntiguo.jsp";
+        String rutaPrincipal = contexto + "/Vista/Principal.jsp";
 
         int op;
 
         try {
             op = Integer.parseInt(request.getParameter("op"));
         } catch (NumberFormatException e) {
-            response.sendRedirect(contexto + rutaTienda);
+            response.sendRedirect(rutaPrincipal);
             return;
         }
 
         /*
-         * OPERACIÓN 1:
-         * AGREGAR PRODUCTO AL CARRITO
-         *
-         * Si el comprador no inició sesión, guardamos
-         * la página donde estaba y lo enviamos al login.
-         */
-
-        if (op == 1 && sesion.getAttribute("usuario") == null) {
-
-            String categoria = request.getParameter("categoria");
-            String buscar = request.getParameter("buscar");
-
-            StringBuilder paginaRetorno = new StringBuilder(rutaTienda);
-            boolean tieneParametro = false;
-
-            if (categoria != null && !categoria.trim().isEmpty()) {
-
-                paginaRetorno.append("?categoria=")
-                        .append(URLEncoder.encode(categoria, StandardCharsets.UTF_8));
-
-                tieneParametro = true;
-            }
-
-            if (buscar != null && !buscar.trim().isEmpty()) {
-
-                paginaRetorno.append(tieneParametro ? "&" : "?");
-
-                paginaRetorno.append("buscar=")
-                        .append(URLEncoder.encode(buscar, StandardCharsets.UTF_8));
-            }
-
-            // Guardamos la página para regresar después del login
-            sesion.setAttribute("paginaRetorno", paginaRetorno.toString());
-
-            response.sendRedirect(rutaLogin);
-            return;
-        }
-
-        /*
-         * Las demás operaciones del carrito requieren sesión.
+         * TODAS LAS OPERACIONES DEL CARRITO
+         * REQUIEREN QUE EL COMPRADOR HAYA INICIADO SESIÓN.
          */
 
         if (sesion.getAttribute("usuario") == null) {
-
-            sesion.setAttribute("paginaRetorno",
-                    "/Vista/Comprador/Carrito.jsp");
-
-            response.sendRedirect(rutaLogin);
+            response.sendRedirect(rutaPrincipal);
             return;
         }
 
@@ -182,7 +138,6 @@ public class CarritoControlador extends HttpServlet {
                             "No se pudo agregar. Verifica la cantidad y el stock disponible.");
                 }
 
-                // Regresamos a la tienda conservando categoría y búsqueda
                 request.getRequestDispatcher(rutaTienda)
                         .forward(request, response);
 

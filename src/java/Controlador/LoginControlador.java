@@ -1,8 +1,8 @@
 
-
 package Controlador;
 
 import java.io.IOException;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -22,7 +22,16 @@ public class LoginControlador extends HttpServlet {
 
         response.setContentType("text/html;charset=UTF-8");
 
-        int op = Integer.parseInt(request.getParameter("op"));
+        int op;
+
+        try {
+            op = Integer.parseInt(request.getParameter("op"));
+        } catch (NumberFormatException e) {
+            response.sendRedirect(
+                    request.getContextPath() + "/Vista/Principal.jsp"
+            );
+            return;
+        }
 
         switch (op) {
 
@@ -36,37 +45,26 @@ public class LoginControlador extends HttpServlet {
                 if (objUsuario.IniciarSesion(correoUsuario, contraseñaUsuario)) {
 
                     HttpSession sesion = request.getSession();
-                    sesion.setAttribute("usuario", objUsuario);
 
-                    // Recuperar la página desde donde se solicitó iniciar sesión
-                    String paginaRetorno = (String) sesion.getAttribute("paginaRetorno");
-
-                    // Eliminar el dato para que no afecte futuros inicios de sesión
+                    // Limpiar datos de una sesión anterior
+                    sesion.removeAttribute("administrador");
+                    sesion.removeAttribute("usuario");
+                    sesion.removeAttribute("carrito");
                     sesion.removeAttribute("paginaRetorno");
 
-                    // Validar que sea una ruta interna de la aplicación
-                    if (paginaRetorno != null
-                            && paginaRetorno.startsWith("/Vista/")
-                            && !paginaRetorno.startsWith("//")
-                            && !paginaRetorno.contains("://")) {
+                    // Registrar al comprador en esta sesión
+                    sesion.setAttribute("usuario", objUsuario);
 
-                        response.sendRedirect(
-                            request.getContextPath() + paginaRetorno
-                        );
-
-                    } else {
-
-                        response.sendRedirect(
+                    response.sendRedirect(
                             request.getContextPath() + "/Vista/Principal.jsp"
-                        );
-                    }
+                    );
 
                 } else {
 
                     request.setAttribute("mensaje", "Correo o contraseña incorrectos");
 
                     request.getRequestDispatcher(
-                        "/Vista/Login/Usuario/LoginUsuAntiguo.jsp"
+                            "/Vista/Login/Usuario/LoginUsuAntiguo.jsp"
                     ).forward(request, response);
                 }
 
@@ -82,10 +80,18 @@ public class LoginControlador extends HttpServlet {
                 if (objAdministrador.IniciarSesion(correoAdmin, contraseñaAdmin)) {
 
                     HttpSession sesion = request.getSession();
+
+                    // Limpiar datos de una sesión anterior
+                    sesion.removeAttribute("usuario");
+                    sesion.removeAttribute("administrador");
+                    sesion.removeAttribute("carrito");
+                    sesion.removeAttribute("paginaRetorno");
+
+                    // Registrar al administrador en esta sesión
                     sesion.setAttribute("administrador", objAdministrador);
 
                     response.sendRedirect(
-                        request.getContextPath() + "/Vista/Admin/PanelAdmin.jsp"
+                            request.getContextPath() + "/Vista/Admin/PanelAdmin.jsp"
                     );
 
                 } else {
@@ -93,9 +99,17 @@ public class LoginControlador extends HttpServlet {
                     request.setAttribute("mensaje", "Correo o contraseña incorrectos");
 
                     request.getRequestDispatcher(
-                        "/Vista/Login/Admin/Login.jsp"
+                            "/Vista/Login/Admin/Login.jsp"
                     ).forward(request, response);
                 }
+
+                break;
+
+            default:
+
+                response.sendRedirect(
+                        request.getContextPath() + "/Vista/Principal.jsp"
+                );
 
                 break;
         }
