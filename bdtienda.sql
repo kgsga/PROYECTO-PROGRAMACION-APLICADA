@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 19-11-2026 a las 12:30:53
+-- Tiempo de generación: 22-11-2026 a las 02:46:35
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -75,7 +75,7 @@ INSERT INTO `categorias` (`id_categoria`, `nombre`) VALUES
 
 CREATE TABLE `compras` (
   `id_compra` int(11) NOT NULL,
-  `id_usuario` int(11) NOT NULL,
+  `id_usuario` int(11) DEFAULT NULL,
   `fecha` datetime DEFAULT current_timestamp(),
   `total` decimal(10,2) NOT NULL,
   `estado` varchar(30) DEFAULT 'Pendiente'
@@ -86,7 +86,7 @@ CREATE TABLE `compras` (
 --
 
 INSERT INTO `compras` (`id_compra`, `id_usuario`, `fecha`, `total`, `estado`) VALUES
-(1, 1, '2026-11-19 04:05:44', 129.30, 'Enviado');
+(1, 1, '2026-11-19 04:05:44', 129.30, 'Entregado');
 
 -- --------------------------------------------------------
 
@@ -322,7 +322,10 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id_usuario`, `nombre`, `apellido`, `dni`, `celular`, `correo`, `contraseña`) VALUES
-(1, 'Juan', 'Perez', '12345678', '987654321', 'juan@gmail.com', '123456');
+(1, 'Juan', 'Perez', '12345678', '987654321', 'juan@gmail.com', '123456'),
+(2, 'Maria', 'Gomez', '45678912', '912345678', 'mariag@gmail.com', 'maria123'),
+(4, 'Alex', 'Martinez', '78945612', '987123456', 'alexm@gmail.com', 'alex1234'),
+(5, 'Dylan', 'Ponce', '45685215', '123457424', 'dypon45@gmail.com', 'Dypon456');
 
 --
 -- Índices para tablas volcadas
@@ -346,7 +349,7 @@ ALTER TABLE `categorias`
 --
 ALTER TABLE `compras`
   ADD PRIMARY KEY (`id_compra`),
-  ADD KEY `id_usuario` (`id_usuario`);
+  ADD KEY `compras_ibfk_1` (`id_usuario`);
 
 --
 -- Indices de la tabla `detalle_compra`
@@ -445,7 +448,7 @@ ALTER TABLE `detalle_orden_compra`
 -- AUTO_INCREMENT de la tabla `lotes_producto`
 --
 ALTER TABLE `lotes_producto`
-  MODIFY `id_lote` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_lote` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `ordenes_compra`
@@ -475,7 +478,7 @@ ALTER TABLE `proveedor_producto`
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- Restricciones para tablas volcadas
@@ -485,7 +488,7 @@ ALTER TABLE `usuarios`
 -- Filtros para la tabla `compras`
 --
 ALTER TABLE `compras`
-  ADD CONSTRAINT `compras_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`);
+  ADD CONSTRAINT `compras_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `detalle_compra`
