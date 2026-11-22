@@ -1,7 +1,0 @@
-ADMINISTRADOR 
-admin@gmail.com
-admin123
-
-USUARIO
-juan@gmail.com
-123456
