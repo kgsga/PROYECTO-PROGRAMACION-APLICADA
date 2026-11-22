@@ -1,3 +1,4 @@
+
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://www.netbeans.org/ns/project/1">
     <type>org.netbeans.modules.web.project</type>
@@ -6,10 +7,6 @@
             <name>PROYECTOPROGAPLI</name>
             <minimum-ant-version>1.6.5</minimum-ant-version>
             <web-module-libraries>
-                <library dirs="200">
-                    <file>${file.reference.mysql-connector-java-5.1.23.jar}</file>
-                    <path-in-war>WEB-INF/lib</path-in-war>
-                </library>
                 <library dirs="200">
                     <file>${file.reference.mysql-connector-j-9.7.0.jar}</file>
                     <path-in-war>WEB-INF/lib</path-in-war>
@@ -25,3 +22,4 @@
         </data>
     </configuration>
 </project>
+
