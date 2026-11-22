@@ -7,10 +7,14 @@ WORKDIR /app
 
 COPY . .
 
-RUN ant -Dlibs.CopyLibs.classpath=/app/lib/org-netbeans-modules-java-j2seproject-copylibstask.jar clean dist
+RUN ant \
+    -Dj2ee.server.home=/usr/local/tomcat \
+    -Dlibs.CopyLibs.classpath=/app/lib/org-netbeans-modules-java-j2seproject-copylibstask.jar \
+    clean dist
 
 RUN rm -rf /usr/local/tomcat/webapps/ROOT
 
 RUN cp dist/*.war /usr/local/tomcat/webapps/ROOT.war
 
 EXPOSE 8080
+
