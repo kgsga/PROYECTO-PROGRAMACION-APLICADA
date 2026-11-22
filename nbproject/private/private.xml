@@ -3,34 +3,6 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/web/Vista/Principal.jsp</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/web/Vista/Comprador/MiCuenta.jsp</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/src/java/Controlador/UsuarioControlador.java</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/src/java/Controlador/CompraControlador.java</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/src/java/Controlador/CerrarSesionControlador.java</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/web/Vista/Comprador/Carrito.jsp</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/src/java/Controlador/CarritoControlador.java</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/src/java/Controlador/LoginControlador.java</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/src/java/Controlador/ProductoControlador.java</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/src/java/Controlador/AlertaInventarioControlador.java</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/src/java/Controlador/DetalleCompraControlador.java</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/src/java/Controlador/OrdenCompraControlador.java</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/src/java/Controlador/ProveedorControlador.java</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/web/Vista/Comprador/MisCompras.jsp</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/web/Vista/Admin/DetalleCompra.jsp</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/web/Vista/Admin/AlertasInventario.jsp</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/web/Vista/Comprador/Tienda.jsp</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/web/Vista/Login/Admin/Login.jsp</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/web/Vista/Login/Usuario/LoginUsuAntiguo.jsp</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/web/Vista/Login/Usuario/LoginUsuNuevo.jsp</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/web/Vista/Admin/PanelAdmin.jsp</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/web/Vista/Admin/GestionCompras.jsp</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/web/Vista/Admin/GestionProductos.jsp</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/web/Vista/Admin/GestionUsuarios.jsp</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/web/Vista/Admin/GestionProveedores.jsp</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/web/Vista/Admin/GestionOrdenesCompra.jsp</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/web/Vista/Admin/DetalleOrdenCompra.jsp</file>
-            <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/src/java/Modelo/Producto.java</file>
             <file>file:/C:/Users/KIOMY/Documents/GitHub/PROYECTOPROGAPLI/src/java/Util/Cloudinary.java</file>
         </group>
     </open-files>
