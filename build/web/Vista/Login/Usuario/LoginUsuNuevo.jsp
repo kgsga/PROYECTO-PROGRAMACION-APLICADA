@@ -220,13 +220,13 @@
                 <div class="campo">
                     <label for="txtcelular">Celular</label>
                     <input
-                        type="text"
+                        type="tel"
                         id="txtcelular"
                         name="txtcelular"
-                        placeholder="+51 987 654 321"
-                        maxlength="16"
+                        placeholder="987 654 321"
+                        maxlength="9"
                         inputmode="numeric"
-                        autocomplete="tel"
+                        autocomplete="tel-national"
                         required
                     >
                 </div>
@@ -292,31 +292,9 @@
     <script>
         const celular = document.getElementById("txtcelular");
 
+        // Permitir únicamente números y un máximo de 9 dígitos.
         celular.addEventListener("input", function () {
-
-            let numeros = this.value.replace(/\D/g, "");
-
-            if (numeros.startsWith("51") && numeros.length > 9) {
-                numeros = numeros.substring(2);
-            }
-
-            numeros = numeros.substring(0, 9);
-
-            let formato = "+51";
-
-            if (numeros.length > 0) {
-                formato += " " + numeros.substring(0, 3);
-            }
-
-            if (numeros.length > 3) {
-                formato += " " + numeros.substring(3, 6);
-            }
-
-            if (numeros.length > 6) {
-                formato += " " + numeros.substring(6, 9);
-            }
-
-            this.value = formato;
+            this.value = this.value.replace(/\D/g, "").substring(0, 9);
         });
 
         function registrarUsuario() {
@@ -330,9 +308,9 @@
                 return;
             }
 
-            const numero = celular.value.replace(/\D/g, "");
+            const numero = celular.value;
 
-            if (numero.length !== 9) {
+            if (!/^\d{9}$/.test(numero)) {
                 alert("Ingresa un número de celular válido de 9 dígitos.");
                 celular.focus();
                 return;

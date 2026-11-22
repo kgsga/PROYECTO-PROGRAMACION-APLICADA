@@ -51,7 +51,7 @@ public class UsuarioControlador extends HttpServlet {
                 }
 
                 request.getRequestDispatcher(
-                    "/Vista/Login/Usuario/LoginUsuNuevo.jsp"
+                    "/Vista/Login/Usuario/LoginUsuAntiguo.jsp"
                 ).forward(request, response);
 
                 break;

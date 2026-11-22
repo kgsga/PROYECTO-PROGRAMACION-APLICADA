@@ -33,9 +33,11 @@ public class Compra {
             cn = ConexionBD.getConexionBD();
 
             pt = cn.prepareStatement(
-                "SELECT c.*, u.nombre, u.apellido " +
+                "SELECT c.*, " +
+                "CASE WHEN c.id_usuario IS NULL THEN 'Usuario eliminado' ELSE u.nombre END AS nombre, " +
+                "CASE WHEN c.id_usuario IS NULL THEN '' ELSE u.apellido END AS apellido " +
                 "FROM compras c " +
-                "INNER JOIN usuarios u ON c.id_usuario = u.id_usuario " +
+                "LEFT JOIN usuarios u ON c.id_usuario = u.id_usuario " +
                 "ORDER BY c.fecha DESC"
             );
 

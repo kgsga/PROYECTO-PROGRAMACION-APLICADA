@@ -753,8 +753,9 @@
                                         <span class="dato-titulo">Cliente</span>
 
                                         <span class="dato-valor">
-                                            <%=c.nombre_usuario%>
-                                            <%=c.apellido_usuario%>
+                                            <%= "Usuario eliminado".equals(c.nombre_usuario)
+                                                ? "Usuario eliminado"
+                                                : c.nombre_usuario + " " + c.apellido_usuario %>
                                         </span>
 
                                     </div>
